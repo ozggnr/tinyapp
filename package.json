@@ -16,5 +16,8 @@
   "bugs": {
     "url": "https://github.com/ozggnr/tinyapp/issues"
   },
-  "homepage": "https://github.com/ozggnr/tinyapp#readme"
+  "homepage": "https://github.com/ozggnr/tinyapp#readme",
+  "dependencies": {
+    "express": "^4.17.1"
+  }
 }
