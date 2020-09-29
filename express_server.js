@@ -32,6 +32,7 @@ app.get("/urls/:shortURL", (req, res) => {
   const templateVars = {
   longURL : urlDatabase[randomString],
   shortURL : randomString}
+  console.log(req.params)
   res.render("urls_show", templateVars)
 });
 
@@ -39,6 +40,13 @@ app.get("/u/:shortURL", (req, res) => {
   const longURL = urlDatabase[randomString];
   res.redirect(longURL);
 });
+
+app.post("/urls/:shortURL/delete", (req,res) => {
+  console.log("something will delete",req.params.shortURL)
+  delete urlDatabase[req.params.shortURL];
+  res.redirect('/urls')
+})
+
 
 // app.get("/", (req,res) => {
 //   res.send("Hello!");
@@ -48,10 +56,7 @@ function generateRandomString() {
   return Math.random().toString(36).substring(2,8)
 }
 
-// app.get('*', (req, res) => {
-//   // render the 404
-//   res.render('404');
-// });
+
 //Server listen given port
 app.listen(PORT, () => {
   console.log(`Example app listening on port ${PORT}!`)
