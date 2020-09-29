@@ -20,7 +20,7 @@ let randomString = generateRandomString()
 //create a new key-value pair which comes from submission and add database
 app.post("/urls", (req, res) => {
   urlDatabase[randomString] = req.body.longURL; 
-  console.log(urlDatabase); 
+  // console.log(urlDatabase); 
   res.redirect(`/urls/${randomString}`);
 });
 
@@ -29,18 +29,27 @@ app.get("/urls/new", (req,res) => {
 })
 
 app.get("/urls/:shortURL", (req, res) => {
+  console.log(req.params.shortURL)
   const templateVars = {
-  longURL : urlDatabase[randomString],
-  shortURL : randomString}
-  console.log(req.params)
+  longURL : urlDatabase[req.params.shortURL],
+  shortURL : req.params.shortURL}
+  // console.log(req.params)
   res.render("urls_show", templateVars)
 });
-
+//for our database
 app.get("/u/:shortURL", (req, res) => {
-  const longURL = urlDatabase[randomString];
+  console.log(req.params)
+  const longURL = urlDatabase[req.params.shortURL];
   res.redirect(longURL);
 });
 
+//update
+app.post("/urls/:shortURL", (req,res) => {
+  console.log("something will update",req.params.shortURL,req.body.longURL)
+  urlDatabase[req.params.shortURL] = req.body.longURL;
+  res.redirect("/urls")
+})
+//Delete
 app.post("/urls/:shortURL/delete", (req,res) => {
   console.log("something will delete",req.params.shortURL)
   delete urlDatabase[req.params.shortURL];
@@ -48,9 +57,6 @@ app.post("/urls/:shortURL/delete", (req,res) => {
 })
 
 
-// app.get("/", (req,res) => {
-//   res.send("Hello!");
-// });
 
 function generateRandomString() {
   return Math.random().toString(36).substring(2,8)
