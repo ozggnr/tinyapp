@@ -12,9 +12,24 @@ const urlDatabase = {
   "b2xVn2" : "http://www.lighthouselabs.ca",
   "9sm5xK": "http://www.google.com"
 };
+//create users database
+const users = { 
+  "userIDone": {
+    id: "userIDone", 
+    email: "user@example.com", 
+    password: "purple-monkey-dinosaur"
+  },
+ "userIDtwo": {
+    id: "userIDtwo", 
+    email: "user2@example.com", 
+    password: "dishwasher-funk"
+  }
+}
+
 //render database in urls_index
 app.get("/urls", (req,res) => {
-  const templateVars = {username: req.cookies["username"],urls : urlDatabase};
+  const user_id = req.cookies["user_id"]
+  const templateVars = {user : users[user_id], urls : urlDatabase};
   res.render("urls_index", templateVars);
 })
 //create random string for shortURL
@@ -23,30 +38,77 @@ let randomString = generateRandomString()
 app.post("/urls", (req, res) => {
   urlDatabase[randomString] = req.body.longURL; 
   // console.log(urlDatabase); 
+  const emailChecker = emailFinder(email);
+  if (emailChecker) {
+    return res.send("This email is already exist!");
+  }
   res.redirect(`/urls/${randomString}`);
 });
 app.get("/urls/new", (req,res) => {
-  const templateVars = {username: req.cookies["username"]}
+  const user_id = req.cookies["user_id"]
+  const templateVars = { user : users[user_id] }
   res.render("urls_new",templateVars);
 })
 
 app.post("/login", (req,res) => {
-  res.cookie("username",req.body.username)
-  // console.log(req)
-  res.redirect("/urls")
+  const user_id = req.cookies["user_id"]
+  const templateVars = { user : users[user_id] }
+  const { email, password } = req.body;
+
+  if (!email || !password) { 
+    res.statusCode(403);
+    return res.send("something missing");
+  }
+  res.redirect("urls",templateVars);
 })
+
+
+// app.get('/login', (req,res) => {
+//   const user_id = req.cookies["user_id"]
+//   const templateVars = { user : users[user_id]}
+//   res.render("urls",templateVars)
+// })
 app.get('/login', (req,res) => {
-  const templateVars = {username: req.body.username}
-  res.render("urls",templateVars)
+  // const user_id = req.cookies["user_id"]
+  // const templateVars = { user : users[user_id]}
+  res.render("login")
 })
 app.post('/logout', (req,res) => {
-  res.clearCookie("username")
+  res.clearCookie("user_id")
   res.redirect("/urls")
 })
+app.get("/register", (req,res) => {
+  res.render("registration");
+})
+
+app.post('/register', (req,res) => {
+  const id = generateRandomString();
+  const newUser = { id: id, 
+    email: req.body.email, 
+    password: req.body.password
+    }
+  users[id]= newUser;
+
+  const { email, password } = req.body;
+
+  if (!email || !password) { 
+    return res.send("something missing")
+  }
+  res.cookie("user_id",newUser.id)
+  // console.log(users);
+  //checkin if the given email is already exist or not
+  const emailChecker = emailFinder(email);
+  if (emailChecker) {
+    return res.send("This email is already exist!");
+  }
+  res.redirect("/urls")
+})
+
+
 app.get("/urls/:shortURL", (req, res) => {
   console.log(req.params.shortURL)
   const templateVars = {
-  username: req.cookies["username"],
+  newUser,
   longURL : urlDatabase[req.params.shortURL],
   shortURL : req.params.shortURL}
   res.render("urls_show", templateVars)
@@ -73,8 +135,21 @@ app.post("/urls/:shortURL/delete", (req,res) => {
 
 
 
+// app.get('*', function(req, res){
+//   res.status(404).send('what???');
+// });
+//define some helper functions
 function generateRandomString() {
   return Math.random().toString(36).substring(2,8)
+}
+function emailFinder (people, email) {
+  for (let user_id in people) {
+    const newPerson = people[user_id];
+    if (newPerson.email === email){
+      return newPerson;
+    }
+  }
+  return null;
 }
 
 
