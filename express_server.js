@@ -15,8 +15,8 @@ app.use(
 )
 const {
       generateRandomString, 
-      emailFinder,
       checkUser,
+      getUserByEmail,
       urlUser
     } = require('./helper_functions');
 
@@ -25,7 +25,7 @@ app.use(bodyParser.urlencoded({extended: true}));
 // app.use(cookieParser());
 
 //define the database which we will use or add different values
-const olderlDatabase = {
+const olderDatabase = {
   "b2xVn2" : "http://www.lighthouselabs.ca",
   "9sm5xK": "http://www.google.com"
 };
@@ -53,7 +53,7 @@ const users = {
 app.get("/urls", (req,res) => {
   const user_id = req.session.user_id;
   const userTable = urlUser(urlDatabase,user_id);
-  const templateVars = {user : users[user_id], urls : userTable};
+  const templateVars = {user : user_id, urls : userTable};
   res.render("urls_index",templateVars);
 })
 
@@ -61,7 +61,7 @@ app.post("/urls", (req, res) => {
   const user_id = req.session.user_id;
   const randomString = generateRandomString()
   let longURL = req.body.longURL;
-  urlDatabase[randomString] = {longURL, userID: user_id}; 
+  urlDatabase[randomString] = {longURL, user : user_id}; 
   res.redirect(`/urls/${randomString}`);
 });
 
@@ -115,7 +115,7 @@ app.post('/register', (req,res) => {
     return res.status(404).send("<h2>Email or password is missing!</h2>")
   }
   
-  const emailChecker = emailFinder(email,users);
+  const emailChecker = getUserByEmail(email,users);
   if (emailChecker) {
     return res.send("<h2>This email is already exist!</h2>");
   }
@@ -128,11 +128,12 @@ app.post('/register', (req,res) => {
 
 
 app.get("/urls/:shortURL", (req, res) => {
-  // const user_id = req.session.user_id
+  const user_id = req.session.user_id;
   const templateVars = {
-  user : urlDatabase[req.params.shortURL].userID,
-  longURL : urlDatabase[req.params.shortURL].longURL,
-  shortURL : req.params.shortURL}
+    user : user_id,
+    longURL : urlDatabase[req.params.shortURL].longURL,
+    shortURL : req.params.shortURL
+  }
   res.render("urls_show", templateVars)
 });
 
@@ -145,13 +146,22 @@ app.get("/u/:shortURL", (req, res) => {
 
 //update
 app.post("/urls/:shortURL", (req,res) => {
-  urlDatabase[req.params.shortURL].longURL = req.body.longURL;
+  if(user_id == urlDatabase[req.params.shortURL].userID) {
+    res.send("Forbidden!");
+  } else {
+    urlDatabase[req.params.shortURL].longURL = req.body.longURL;
+  }
   res.redirect("/urls");
 })
 
 //Delete
 app.post("/urls/:shortURL/delete", (req,res) => {
-  delete urlDatabase[req.params.shortURL]; 
+  const user_id = req.session.user_id
+  if(user_id == urlDatabase[req.params.shortURL].userID) {
+    res.send("Forbidden!");
+  } else {
+    delete urlDatabase[req.params.shortURL]; 
+  }
   res.redirect('/urls')
 })
 
