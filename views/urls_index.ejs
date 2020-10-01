@@ -11,10 +11,13 @@
 </head>
 <body>
   <% if (!user) {%>
-    <h2>Please log in</h2> 
-    <p>
-    <a class="nav-item nav-link" href="/login"> Log in</a> or
-    <a class="nav-item nav-link" href="/register"> Register</a></p>
+    <div class="card text-center">
+      <div class="card-header"></div>
+    <h2>Please Log In</h2> 
+    <div class="alert alert-secondary" role="alert">
+    <p>You must be 
+    <a  href="/login"> Log in</a> or
+    <a  href="/register"> Register</a> to access the website.</p></div> </div>
     <% }  %>
     <% if(user){ %>
   <main style="margin: 1em;">
