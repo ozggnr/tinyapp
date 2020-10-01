@@ -1,12 +1,18 @@
 const express = require("express");
 const app = express();
 const cookieParser = require('cookie-parser')
-const PORT = 8080; //default port 8080
-//set ejs as the view engine
-app.set("view engine", "ejs");
+const PORT = 8080; 
 const bodyParser = require("body-parser");
+const {
+      generateRandomString, 
+      emailFinder,
+      checkUser
+    } = require('./helper_functions');
+
+app.set("view engine", "ejs");
 app.use(bodyParser.urlencoded({extended: true}));
-app.use(cookieParser())
+app.use(cookieParser());
+
 //define the database which we will use or add different values
 const urlDatabase = {
   "b2xVn2" : "http://www.lighthouselabs.ca",
@@ -32,10 +38,10 @@ app.get("/urls", (req,res) => {
   const templateVars = {user : users[user_id], urls : urlDatabase};
   res.render("urls_index", templateVars);
 })
-//create random string for shortURL
-let randomString = generateRandomString()
-//create a new key-value pair which comes from submission and add database
+
+
 app.post("/urls", (req, res) => {
+  const randomString = generateRandomString()
   urlDatabase[randomString] = req.body.longURL; 
   // console.log(urlDatabase); 
   const emailChecker = emailFinder(email);
@@ -44,6 +50,7 @@ app.post("/urls", (req, res) => {
   }
   res.redirect(`/urls/${randomString}`);
 });
+
 app.get("/urls/new", (req,res) => {
   const user_id = req.cookies["user_id"]
   const templateVars = { user : users[user_id] }
@@ -51,28 +58,27 @@ app.get("/urls/new", (req,res) => {
 })
 
 app.post("/login", (req,res) => {
-  const user_id = req.cookies["user_id"]
-  const templateVars = { user : users[user_id] }
   const { email, password } = req.body;
-
   if (!email || !password) { 
-    res.statusCode(403);
-    return res.send("something missing");
+    return res.status(403).send("Email or password is missing");
   }
-  res.redirect("urls",templateVars);
+  const returnedUser = checkUser(email, users)
+  if (returnedUser === null) {
+    return res.status(403).send("User does not exist");
+  }
+  if (returnedUser.password !== password) {
+    return res.status(403).send("Incorrect password! Try Again");
+  } 
+  res.cookie("user_id", returnedUser.id)
+  res.redirect("/urls");
 })
 
-
-// app.get('/login', (req,res) => {
-//   const user_id = req.cookies["user_id"]
-//   const templateVars = { user : users[user_id]}
-//   res.render("urls",templateVars)
-// })
 app.get('/login', (req,res) => {
-  // const user_id = req.cookies["user_id"]
-  // const templateVars = { user : users[user_id]}
-  res.render("login")
+  const user_id = req.cookies["user_id"]
+  const templateVars = { user : users[user_id]}
+  res.render("login_page",templateVars)
 })
+
 app.post('/logout', (req,res) => {
   res.clearCookie("user_id")
   res.redirect("/urls")
@@ -83,24 +89,20 @@ app.get("/register", (req,res) => {
 
 app.post('/register', (req,res) => {
   const id = generateRandomString();
-  const newUser = { id: id, 
-    email: req.body.email, 
-    password: req.body.password
-    }
-  users[id]= newUser;
-
   const { email, password } = req.body;
 
   if (!email || !password) { 
-    return res.send("something missing")
+    return res.status(404).send("Email or password is missing!")
   }
-  res.cookie("user_id",newUser.id)
-  // console.log(users);
+  
   //checkin if the given email is already exist or not
-  const emailChecker = emailFinder(email);
+  const emailChecker = emailFinder(email,users);
   if (emailChecker) {
     return res.send("This email is already exist!");
   }
+  const newUser = { id, email, password };
+  users[id]= newUser;
+  res.cookie("user_id",newUser.id)
   res.redirect("/urls")
 })
 
@@ -139,18 +141,7 @@ app.post("/urls/:shortURL/delete", (req,res) => {
 //   res.status(404).send('what???');
 // });
 //define some helper functions
-function generateRandomString() {
-  return Math.random().toString(36).substring(2,8)
-}
-function emailFinder (people, email) {
-  for (let user_id in people) {
-    const newPerson = people[user_id];
-    if (newPerson.email === email){
-      return newPerson;
-    }
-  }
-  return null;
-}
+
 
 
 //Server listen given port
