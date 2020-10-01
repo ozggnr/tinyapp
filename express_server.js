@@ -1,8 +1,6 @@
 const express = require("express");
 const app = express();
 const cookieSession = require('cookie-session') 
-// change all res.cookie and req.cookie with req.session["user_id"] = userID
-//req.sesstion["user_id"] = null to clear cookie
 const PORT = 8080; 
 const bodyParser = require("body-parser");
 const bcrypt = require('bcrypt');
@@ -22,7 +20,6 @@ const {
 
 app.set("view engine", "ejs");
 app.use(bodyParser.urlencoded({extended: true}));
-// app.use(cookieParser());
 
 //define the database which we will use or add different values
 const olderDatabase = {
@@ -48,20 +45,18 @@ const users = {
     password: "dishwasher-funk"
   }
 }
-
 //render database in urls_index
 app.get("/urls", (req,res) => {
   const user_id = req.session.user_id;
   const userTable = urlUser(urlDatabase,user_id);
-  const templateVars = {user : user_id, urls : userTable};
+  const templateVars = {user : users[user_id], urls : userTable};
   res.render("urls_index",templateVars);
 })
-
 app.post("/urls", (req, res) => {
   const user_id = req.session.user_id;
   const randomString = generateRandomString()
   let longURL = req.body.longURL;
-  urlDatabase[randomString] = {longURL, user : user_id}; 
+  urlDatabase[randomString] = {longURL, userID: user_id}; 
   res.redirect(`/urls/${randomString}`);
 });
 
@@ -77,17 +72,16 @@ app.post("/login", (req,res) => {
     return res.status(403).send("<h2>Email or password is missing</h2>");
   }
   const returnedUser = checkUser(email, users);
-
-  if (returnedUser === null) {
+  if (!returnedUser) {
     return res.status(403).send("<h2>User does not exist</h2>");
   }
-  const cryptPassword = bcrypt.hashSync(password,saltRounds)
-
-  if (bcrypt.compareSync(cryptPassword,returnedUser.password)) {
+  if (returnedUser && bcrypt.compareSync(password,returnedUser.cryptPassword)) {
+    req.session.user_id = returnedUser.id;
+    res.redirect("/urls");
+  } else if (!bcrypt.compareSync(password,returnedUser.cryptPassword)) {
     return res.status(403).send("<h2>Incorrect password! Try Again</h2>");
   } 
   req.session.user_id = returnedUser.id;
-  res.redirect("/urls");
 })
 
 app.get('/login', (req,res) => {
@@ -114,7 +108,6 @@ app.post('/register', (req,res) => {
   if (!email || !password) { 
     return res.status(404).send("<h2>Email or password is missing!</h2>")
   }
-  
   const emailChecker = getUserByEmail(email,users);
   if (emailChecker) {
     return res.send("<h2>This email is already exist!</h2>");
@@ -129,8 +122,9 @@ app.post('/register', (req,res) => {
 
 app.get("/urls/:shortURL", (req, res) => {
   const user_id = req.session.user_id;
+  console.log(user_id)
   const templateVars = {
-    user : user_id,
+    user : users[user_id],
     longURL : urlDatabase[req.params.shortURL].longURL,
     shortURL : req.params.shortURL
   }
@@ -139,14 +133,14 @@ app.get("/urls/:shortURL", (req, res) => {
 
 //for our database
 app.get("/u/:shortURL", (req, res) => {
-  // console.log(req.params)
   const longURL = urlDatabase[req.params.shortURL].longURL;
   res.redirect(longURL);
 });
 
 //update
 app.post("/urls/:shortURL", (req,res) => {
-  if(user_id == urlDatabase[req.params.shortURL].userID) {
+  const user_id = req.session.user_id;
+  if(user_id !== urlDatabase[req.params.shortURL].userID) {
     res.send("Forbidden!");
   } else {
     urlDatabase[req.params.shortURL].longURL = req.body.longURL;
@@ -156,8 +150,8 @@ app.post("/urls/:shortURL", (req,res) => {
 
 //Delete
 app.post("/urls/:shortURL/delete", (req,res) => {
-  const user_id = req.session.user_id
-  if(user_id == urlDatabase[req.params.shortURL].userID) {
+  const user_id = req.session.user_id;
+  if(user_id !== urlDatabase[req.params.shortURL].userID) {
     res.send("Forbidden!");
   } else {
     delete urlDatabase[req.params.shortURL]; 

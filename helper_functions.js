@@ -35,5 +35,4 @@ const urlUser = function (dbUrl, id) {
   return filtered;
 }
 
-
  module.exports = {generateRandomString, checkUser, urlUser, getUserByEmail};
