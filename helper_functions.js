@@ -22,5 +22,15 @@ const checkUser = function (email, db) {
   }
   return null;
 }
+const urlUser = function (dbUrl, id) {
+  const filtered = {};
+  for (let shortURL in dbUrl) {
+    const urlObj = dbUrl[shortURL];
+    if (urlObj.userID === id) {
+      filtered[shortURL] = urlObj;
+    }
+  }
+  return filtered;
+}
 
- module.exports = {generateRandomString, emailFinder,checkUser};
+ module.exports = {generateRandomString, emailFinder,checkUser, urlUser};
