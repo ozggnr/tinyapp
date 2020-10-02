@@ -104,7 +104,6 @@ app.get("/register", (req,res) => {
 app.post('/register', (req,res) => {
   const id = generateRandomString();
   const { email, password } = req.body;
-  
   if (!email || !password) { 
     return res.status(404).send("<h2>Email or password is missing!</h2>")
   }
@@ -119,16 +118,17 @@ app.post('/register', (req,res) => {
   res.redirect("/urls")
 })
 
-
 app.get("/urls/:shortURL", (req, res) => {
   const user_id = req.session.user_id;
-  console.log(user_id)
-  const templateVars = {
-    user : users[user_id],
-    longURL : urlDatabase[req.params.shortURL].longURL,
-    shortURL : req.params.shortURL
+  if (urlDatabase[req.params.shortURL] === undefined) {
+    return res.send("This ID either does not exist or not belong to you!")
   }
-  res.render("urls_show", templateVars)
+  const templateVars = {
+  user : users[user_id],
+  longURL : urlDatabase[req.params.shortURL].longURL,
+  shortURL : req.params.shortURL
+  };
+  res.render("urls_show", templateVars);
 });
 
 //for our database
