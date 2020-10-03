@@ -86,6 +86,8 @@ app.get("/register", (req,res) => {
 app.post('/register', (req,res) => {
   const id = generateRandomString();
   const { email, password } = req.body;
+  console.log(email)
+  console.log(password)
   if (!email || !password) {
     return res.status(404).send("<h2>Email or password is missing!</h2>");
   }

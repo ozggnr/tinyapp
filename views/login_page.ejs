@@ -9,18 +9,18 @@
 </head>
 <header><%- include('partials/_header') %></header>
 <body>
-  <h2 style="padding: 1em">LOG IN</h2>
-  <form  method="POST" action="/login">
-  <div class="form-group"></div>
-    <label for="email" style="padding: 1em">Email</label>
-    <input  type="email" name="email" placeholder="email">
+<div class="container" style="padding: 5em">
+  <div class="row justify-content-center">
+  <h2 style="text-align: center; padding: 1em" class="h3 mb-3 font-weight-normal">Please LOGIN</h2> 
+      <form method="POST" action="/login" >
+        <label for="inputEmail">Email address</label>
+        <input style="width: 30em" type="email" class="form-control" id="InputEmail1" aria-describedby="emailHelp" placeholder="Enter email">
+       <label for="password">Password</label>
+        <input type="password" class="form-control" name="password" placeholder="Password">
+       <button style="margin-top: 1em" type="submit" class="btn btn-success">Login</button>
+    </form>
   </div>
-  <div class="form-group"></div>
-    <label for="password">Password</label>
-    <input  type="password" name="password" placeholder="password">
-    <button style="float: inline-end;" type="submit" class="btn btn-outline-dark my-2 my-sm-0">Log in</button></form>
-  </div>
-  </form>
+</div>
      <!-- Bootstrap JS -->
   <script src="https://code.jquery.com/jquery-3.3.1.slim.min.js" integrity="sha384-q8i/X+965DzO0rT7abK41JStQIAqVgRVzpbzo5smXKp4YfRvH+8abtTE1Pi6jizo" crossorigin="anonymous"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.7/umd/popper.min.js" integrity="sha384-UO2eT0CpHqdSJQ6hJty5KVphtPhzWj9WO1clHTMGa3JDZwrnQq4sF86dIHNDz0W1" crossorigin="anonymous"></script>
